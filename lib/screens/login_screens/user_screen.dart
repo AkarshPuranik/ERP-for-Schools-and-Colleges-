@@ -240,82 +240,104 @@ class _UserScreenState extends State<UserScreen> {
                 ],
               ),
               const SizedBox(height: 20.0),
-              FadeInLeft(
-                duration: Duration(seconds: 2),
-                child: TextFormField(
-                  controller:
-                      isStudent ? _enrollmentController : _emailController,
-                  decoration: InputDecoration(
-                    labelText: isStudent ? 'Enrollment Number' : 'Email',
-                    floatingLabelBehavior: FloatingLabelBehavior.auto,
-                    border: const OutlineInputBorder(),
+              // Display TextFormFields only if either Student or Teacher is selected
+              if (_selectedDoctor != null) ...[
+                FadeInLeft(
+                  duration: Duration(seconds: 2),
+                  child: TextFormField(
+                    controller:
+                        isStudent ? _enrollmentController : _emailController,
+                    decoration: InputDecoration(
+                      labelText: isStudent ? 'Enrollment Number' : 'Email',
+                      floatingLabelBehavior: FloatingLabelBehavior.auto,
+                      border: const OutlineInputBorder(),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20.0),
-              FadeInRight(
-                child: TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    floatingLabelBehavior: FloatingLabelBehavior.auto,
-                    border: OutlineInputBorder(),
+                const SizedBox(height: 20.0),
+                FadeInRight(
+                  child: TextFormField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Password',
+                      floatingLabelBehavior: FloatingLabelBehavior.auto,
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20.0),
-              // TextButton(
-              //   onPressed: () {
-              //     if (isStudent) {
-              //       Navigator.pushReplacement(
-              //         context,
-              //         MaterialPageRoute(builder: (_) => const SignupScreen()),
-              //       );
-              //     } else {
-              //       Navigator.pushReplacement(
-              //         context,
-              //         MaterialPageRoute(
-              //             builder: (_) => const TeacherCreateAccount()),
-              //       );
-              //     }
-              //   },
-              //   child: Text(
-              //     isStudent
-              //         ? 'Register for student account?'
-              //         : 'Register for teacher account?',
-              //     style: TextStyle(color: Colors.blue),
-              //   ),
-              // ),
-              ZoomIn(
-                duration: Duration(seconds: 2),
-                child: ElevatedButton(
-                  style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.all(
-                        const Color.fromARGB(255, 135, 180, 236),
-                      ),
-                      foregroundColor: WidgetStateProperty.all(Colors.black)),
-                  onPressed: _isLoading ? null : _login,
-                  child: _isLoading
-                      ? SizedBox(
-                          width: 24, // Set the width of the loading indicator
-                          height: 24, // Set the height of the loading indicator
-                          child: LoadingIndicator(
-                            indicatorType: Indicator
-                                .ballPulse, // Use the ballPulse indicator
-                            colors: [
-                              Colors.red,
-                              Colors.green,
-                              Colors.blue
-                            ], // Customize the color
-                            strokeWidth: 2, // Set the stroke width
-                            backgroundColor:
-                                Colors.transparent, // Set background color
+                const SizedBox(height: 20.0),
+
+//TextButton(
+                //   onPressed: () {
+                //     if (isStudent) {
+                //       Navigator.pushReplacement(
+                //         context,
+                //         MaterialPageRoute(builder: (_) => const SignupScreen()),
+                //       );
+                //     } else {
+                //       Navigator.pushReplacement(
+                //         context,
+                //         MaterialPageRoute(
+                //             builder: (_) => const TeacherCreateAccount()),
+                //       );
+                //     }
+                //   },
+                //   child: Text(
+                //     isStudent
+                //         ? 'Register for student account?'
+                //         : 'Register for teacher account?',
+                //     style: TextStyle(color: Colors.blue),
+                //   ),
+                // ),
+
+                ZoomIn(
+                  duration: Duration(seconds: 2),
+                  child: ElevatedButton(
+                    style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all(
+                          const Color.fromARGB(255, 135, 180, 236),
+                        ),
+                        foregroundColor: WidgetStateProperty.all(Colors.black)),
+                    onPressed: _isLoading ? null : _login,
+                    child: _isLoading
+                        ? SizedBox(
+                            width: 24, // Set the width of the loading indicator
+                            height:
+                                24, // Set the height of the loading indicator
+                            child: LoadingIndicator(
+                              indicatorType: Indicator
+                                  .ballPulse, // Use the ballPulse indicator
+                              colors: [
+                                Colors.red,
+                                Colors.green,
+                                Colors.blue
+                              ], // Customize the color
+                              strokeWidth: 2, // Set the stroke width
+                              backgroundColor:
+                                  Colors.transparent, // Set background color
+                            ),
+                          )
+                        : const Text(
+                            'Login',
+                            style: TextStyle(color: Colors.white),
                           ),
-                        )
-                      : const Text('Login'),
+                  ),
                 ),
-              )
+                // TextButton(
+                //     child: const Text(
+                //       "Create an Account",
+                //       style:
+                //           TextStyle(color: Color.fromARGB(255, 117, 187, 255)),
+                //     ),
+                //     onPressed: () {
+                //       Navigator.push(
+                //           context,
+                //           MaterialPageRoute(
+                //             builder: (_) => SignupScreen(),
+                //           ));
+                //     })
+              ]
             ],
           ),
         ),

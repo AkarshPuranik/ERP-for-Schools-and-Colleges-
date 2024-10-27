@@ -14,7 +14,6 @@ import 'package:school_erp/screens/fees_due_screen.dart';
 import 'package:school_erp/screens/student_screens/settings_screen.dart';
 import 'package:school_erp/screens/student_screens/view_marks.dart';
 import 'package:zoom_tap_animation/zoom_tap_animation.dart';
-
 import '../../model/user_model.dart';
 import '../../reusable_widgets/home_screen_cards/master_card.dart';
 import '../../reusable_widgets/home_screen_cards/small_card.dart';
@@ -66,15 +65,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (feeDoc.exists) {
       final feeData = feeDoc.data() as Map<String, dynamic>;
-      final amount = feeData['amount']; // Fetch the amount value
+      final amount = feeData['amount'];
+      final status = feeData['status']; // Fetch the status value
 
       setState(() {
-        _feesDue = amount.toString(); // Convert to string to display in UI
+        if (status == 'Paid') {
+          _feesDue = "No due's"; // Set to "No due's" if status is paid
+        } else if (status == 'Unpaid') {
+          _feesDue = amount.toString(); // Convert to string to display in UI
+        }
       });
     } else {
-      // Show "Due" if no data is found
+      // Show "No data found" if no data is found
       setState(() {
-        _feesDue = "NULL";
+        _feesDue = "No data found";
       });
       print("No fees data found for enrollment number: $enrollmentNumber");
     }
