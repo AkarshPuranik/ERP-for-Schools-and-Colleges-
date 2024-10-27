@@ -1,3 +1,4 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -159,10 +160,13 @@ class _UserScreenState extends State<UserScreen> {
                       ),
                       child: Column(
                         children: [
-                          Image.asset(
-                            'assets/download.png', // Replace with your student image
-                            height: 140.0,
-                            width: 140.0,
+                          ZoomIn(
+                            duration: Duration(seconds: 2),
+                            child: Image.asset(
+                              'assets/download.png', // Replace with your student image
+                              height: 140.0,
+                              width: 140.0,
+                            ),
                           ),
                           const SizedBox(height: 8.0),
                           const Text(
@@ -204,10 +208,13 @@ class _UserScreenState extends State<UserScreen> {
                       ),
                       child: Column(
                         children: [
-                          Image.asset(
-                            'assets/8065183.png', // Replace with your teacher image
-                            height: 140.0,
-                            width: 140.0,
+                          ZoomIn(
+                            duration: Duration(seconds: 2),
+                            child: Image.asset(
+                              'assets/8065183.png', // Replace with your teacher image
+                              height: 140.0,
+                              width: 140.0,
+                            ),
                           ),
                           const SizedBox(height: 8.0),
                           const Text(
@@ -232,23 +239,28 @@ class _UserScreenState extends State<UserScreen> {
                 ],
               ),
               const SizedBox(height: 20.0),
-              TextFormField(
-                controller:
-                    isStudent ? _enrollmentController : _emailController,
-                decoration: InputDecoration(
-                  labelText: isStudent ? 'Enrollment Number' : 'Email',
-                  floatingLabelBehavior: FloatingLabelBehavior.auto,
-                  border: const OutlineInputBorder(),
+              FadeInLeft(
+                duration: Duration(seconds: 2),
+                child: TextFormField(
+                  controller:
+                      isStudent ? _enrollmentController : _emailController,
+                  decoration: InputDecoration(
+                    labelText: isStudent ? 'Enrollment Number' : 'Email',
+                    floatingLabelBehavior: FloatingLabelBehavior.auto,
+                    border: const OutlineInputBorder(),
+                  ),
                 ),
               ),
               const SizedBox(height: 20.0),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  floatingLabelBehavior: FloatingLabelBehavior.auto,
-                  border: OutlineInputBorder(),
+              FadeInRight(
+                child: TextFormField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Password',
+                    floatingLabelBehavior: FloatingLabelBehavior.auto,
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ),
               const SizedBox(height: 20.0),
