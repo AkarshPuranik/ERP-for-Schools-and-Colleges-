@@ -8,7 +8,7 @@ class FeesDueCard extends StatelessWidget {
   final String paymentMode;
   final String amount;
   final VoidCallback onTapPay;
-  final VoidCallback onTapDownload;
+  final VoidCallback? onTapDownload; // Make onTapDownload optional
 
   const FeesDueCard({
     Key? key,
@@ -19,7 +19,7 @@ class FeesDueCard extends StatelessWidget {
     required this.paymentMode,
     required this.amount,
     required this.onTapPay,
-    required this.onTapDownload,
+    this.onTapDownload, // Not required anymore
   }) : super(key: key);
 
   @override
@@ -56,14 +56,15 @@ class FeesDueCard extends StatelessWidget {
                     backgroundColor: Colors.blue, // Background color
                   ),
                 ),
-                ElevatedButton.icon(
-                  onPressed: onTapDownload,
-                  icon: const Icon(Icons.download),
-                  label: const Text("Download"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // Background color
+                if (onTapDownload != null) // Show Download button only if onTapDownload is not null
+                  ElevatedButton.icon(
+                    onPressed: onTapDownload,
+                    icon: const Icon(Icons.download),
+                    label: const Text("Download"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green, // Background color
+                    ),
                   ),
-                ),
               ],
             ),
           ],

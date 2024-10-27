@@ -1,120 +1,151 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:school_erp/components/custom_appbar.dart';
-import 'package:school_erp/model/attendance_model.dart';
-import 'package:school_erp/reusable_widgets/attendance_card.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../constants/colors.dart';
-import '../../model/user_model.dart';
-
-class AttendanceScreen extends StatefulWidget {
-  const AttendanceScreen({super.key});
+class ViewAttendanceScreen extends StatefulWidget {
+  const ViewAttendanceScreen({super.key});
 
   @override
-  State<AttendanceScreen> createState() => _AttendanceScreenState();
+  State<ViewAttendanceScreen> createState() => _ViewAttendanceScreenState();
 }
 
-class _AttendanceScreenState extends State<AttendanceScreen> {
-  Box<UserModel> userBox = Hive.box<UserModel>('users');
+class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
+  final CollectionReference attendanceCollection =
+  FirebaseFirestore.instance.collection('attendance');
 
-  CollectionReference syllabusCollection =
-      FirebaseFirestore.instance.collection('syllabus');
-
-  CollectionReference subjectsCollection =
-      FirebaseFirestore.instance.collection('subjects');
-
-  CollectionReference attendanceCollection =
-      FirebaseFirestore.instance.collection('attendance');
-  List<String> attendanceList = [];
-
-  List<AttendanceModel> attendance = [];
+  Map<String, List<Map<String, dynamic>>> _groupedAttendance = {};
+  Map<String, double> _subjectAttendancePercentage = {}; // Stores attendance percentage per subject
+  bool _isLoading = false;
+  bool _hasSearched = false;
+  String? enrollmentNumber;
 
   @override
   void initState() {
-    fetchData();
     super.initState();
+    _fetchUserEnrollment(); // Fetch user data when screen is initialized
   }
 
-  Future<void> fetchData() async {
-    await syllabusCollection
-        .where("semester", isEqualTo: userBox.get("user")?.semester)
-        .where("section", isEqualTo: userBox.get("user")?.section)
-        .get()
-        .then((value) => value.docs.forEach((element) {
-              setState(() {
-                attendanceList = List.from(element["subjects"]);
-                debugPrint("Subject: ${attendanceList[0]}");
-              });
-              debugPrint("EventList: ${attendanceList.toString()}");
-            }));
+  Future<void> _fetchUserEnrollment() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-    getAttendance();
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+
+        if (userDoc.exists && userDoc.data() != null) {
+          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
+          if (userData.containsKey('enrollment_number')) {
+            enrollmentNumber = userData['enrollment_number'];
+
+            // Fetch attendance for the user if enrollment number exists
+            if (enrollmentNumber != null && enrollmentNumber!.isNotEmpty) {
+              await _fetchStudentAttendance(enrollmentNumber!);
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Enrollment number not found in user profile")),
+              );
+            }
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("Field 'enrollment_number' not found in user document")),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("User profile not found in Firestore")),
+          );
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("User not logged in")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching user profile: $e")),
+      );
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
   }
 
-  Future<void> getAttendance() async {
-    for (var element in attendanceList) {
-      int total = 0;
-      int attended = 0;
-      int unattended = 0;
-      String subject = "";
+  String capitalize(String status) {
+    return status.isNotEmpty
+        ? status[0].toUpperCase() + status.substring(1).toLowerCase()
+        : status;
+  }
 
-      await subjectsCollection
-          .where("subject_code", isEqualTo: element)
-          .get()
-          .then((value) => {
-                setState(() {
-                  subject = value.docs[0]['subject_name'];
-                }),
-              });
+  Future<void> _fetchStudentAttendance(String enrollmentNumber) async {
+    setState(() {
+      _isLoading = true;
+      _hasSearched = true;
+    });
 
-      await attendanceCollection
-          .where("subject", isEqualTo: element)
-          .where("enrollment",
-              isEqualTo: userBox.get("user")?.enrollmentNumber ?? "")
-          .where("semester", isEqualTo: userBox.get("user")?.semester ?? "")
-          .get()
-          .then((value) => {
-                setState(() {
-                  total = value.size;
-                }),
-                debugPrint("Size: ${value.size}"),
-              });
+    try {
+      QuerySnapshot snapshot = await attendanceCollection
+          .where('enrollment', isEqualTo: enrollmentNumber)
+          .get();
 
-      await attendanceCollection
-          .where("subject", isEqualTo: element)
-          .where("enrollment",
-              isEqualTo: userBox.get("user")?.enrollmentNumber ?? "")
-          .where("semester", isEqualTo: userBox.get("user")?.semester ?? "")
-          .where("status", isEqualTo: "absent")
-          .get()
-          .then((value) => {
-                setState(() {
-                  unattended = value.size;
-                }),
-                debugPrint("unattended: ${value.size}"),
-              });
+      if (snapshot.docs.isEmpty) {
+        print("No attendance records found for this enrollment number.");
+      }
 
-      await attendanceCollection
-          .where("subject", isEqualTo: element)
-          .where("enrollment",
-              isEqualTo: userBox.get("user")?.enrollmentNumber ?? "")
-          .where("semester", isEqualTo: userBox.get("user")?.semester ?? "")
-          .where("status", isEqualTo: "present")
-          .get()
-          .then((value) => {
-                setState(() {
-                  attended = value.size;
-                }),
-                debugPrint("unattended: ${value.size}"),
-              });
+      Map<String, List<Map<String, dynamic>>> groupedAttendance = {};
+      Map<String, int> totalClassesPerSubject = {}; // Total classes per subject
+      Map<String, int> attendedClassesPerSubject = {}; // Attended classes per subject
+
+      for (var doc in snapshot.docs) {
+        Map<String, dynamic> attendanceData = doc.data() as Map<String, dynamic>;
+        String subject = attendanceData['subject'] ?? 'Unknown';
+        String status = attendanceData['status']?.toString().trim().toLowerCase() ?? '';
+        String date = attendanceData['date'] ?? '';
+
+        // Group by subject
+        if (!groupedAttendance.containsKey(subject)) {
+          groupedAttendance[subject] = [];
+          totalClassesPerSubject[subject] = 0;
+          attendedClassesPerSubject[subject] = 0;
+        }
+
+        groupedAttendance[subject]?.add({
+          'date': date,
+          'status': capitalize(status), // Capitalize the status before adding
+        });
+
+        totalClassesPerSubject[subject] = totalClassesPerSubject[subject]! + 1;
+
+        if (status == 'present') {
+          attendedClassesPerSubject[subject] = attendedClassesPerSubject[subject]! + 1;
+        }
+      }
+
+      // Calculate the attendance percentage for each subject
+      Map<String, double> subjectAttendancePercentage = {};
+      totalClassesPerSubject.forEach((subject, totalClasses) {
+        int attendedClasses = attendedClassesPerSubject[subject] ?? 0;
+        double percentage = totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0.0;
+        subjectAttendancePercentage[subject] = percentage;
+      });
 
       setState(() {
-        attendance.add(AttendanceModel(
-            subject: subject,
-            totalClasses: total,
-            attendedClasses: attended,
-            unAttendedClasses: unattended));
+        _groupedAttendance = groupedAttendance;
+        _subjectAttendancePercentage = subjectAttendancePercentage;
+        _isLoading = false;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error fetching attendance: $e")),
+      );
+      setState(() {
+        _isLoading = false;
       });
     }
   }
@@ -122,79 +153,46 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF7292CF),
-      body: SafeArea(
-        child: Stack(
+      appBar: AppBar(
+        title: const Text("View Attendance"),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
           children: [
-            Image.asset(
-              "assets/Star_Background.png",
-              width: MediaQuery.of(context).size.width,
-              fit: BoxFit.cover,
-            ),
-            Column(
-              children: [
-                const CustomAppBar(title: "Attendance"),
-                Expanded(
-                  child: Container(
-                    width: MediaQuery.of(context).size.width,
-                    // height: MediaQuery.of(context).size.height,
-                    margin:
-                        EdgeInsets.only(top: attendance.isEmpty ? 0.0 : 30.0),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20.0),
-                          topLeft: Radius.circular(20.0)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                          top: 20.0, right: 20.0, left: 20.0),
-                      child: attendance.isEmpty
-                          ? const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                CircularProgressIndicator(
-                                  color: primaryColor,
-                                ),
-                                SizedBox(height: 14.0),
-                                Text(
-                                  "Loading data...",
-                                  style: TextStyle(
-                                    fontSize: 18.0,
-                                    color: Colors.black,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  ListView.builder(
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    shrinkWrap: true,
-                                    itemCount: attendance.length,
-                                    itemBuilder: (context, index) {
-                                      return AttendanceCard(
-                                        subject: attendance[index].subject,
-                                        totalClasses:
-                                            attendance[index].totalClasses,
-                                        present:
-                                            attendance[index].attendedClasses,
-                                        absent:
-                                            attendance[index].unAttendedClasses,
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
-                    ),
-                  ),
-                )
-              ],
-            ),
+            if (_isLoading) const CircularProgressIndicator(),
+            if (_hasSearched && !_isLoading && _groupedAttendance.isNotEmpty)
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _groupedAttendance.keys.length,
+                  itemBuilder: (context, index) {
+                    String subject = _groupedAttendance.keys.elementAt(index);
+                    List<Map<String, dynamic>> attendanceRecords =
+                    _groupedAttendance[subject]!;
+                    double subjectPercentage = _subjectAttendancePercentage[subject] ?? 0.0;
+
+                    return ExpansionTile(
+                      title: Text("Subject: $subject"),
+                      subtitle: Text(
+                        "Attendance Percentage: ${subjectPercentage.toStringAsFixed(2)}%",
+                        style: const TextStyle(
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      children: attendanceRecords.map((record) {
+                        return ListTile(
+                          title: Text("Date: ${record['date']}"),
+                          subtitle: Text("Status: ${capitalize(record['status'])}"),
+                        );
+                      }).toList(),
+                    );
+                  },
+                ),
+              ),
+            if (_hasSearched && !_isLoading && _groupedAttendance.isEmpty)
+              const Text("No attendance records found."),
           ],
         ),
       ),

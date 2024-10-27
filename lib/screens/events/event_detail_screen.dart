@@ -1,4 +1,3 @@
-import 'dart:io'; // Import this for File
 import 'package:flutter/material.dart';
 import 'package:school_erp/screens/events/event.dart';
 
@@ -14,7 +13,7 @@ class EventDetailScreen extends StatelessWidget {
         title: Text(event.title),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -22,26 +21,45 @@ class EventDetailScreen extends StatelessWidget {
               event.title,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               "${event.date.toLocal()}".split(' ')[0],
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               event.description,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             if (event.mediaUrls != null && event.mediaUrls!.isNotEmpty)
               Column(
-                children: event.mediaUrls!.map((imagePath) {
+                children: event.mediaUrls!.map((url) {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    child: Image.file(
-                      File(imagePath), // Use File to load local images
+                    child: url.endsWith('.jpg') || url.endsWith('.png')
+                        ? Image.network(
+                      url,
                       height: 200,
                       fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Center(
+                          child: Icon(Icons.broken_image, size: 50),
+                        );
+                      },
+                    )
+                        : ListTile(
+                      leading: const Icon(Icons.insert_drive_file),
+                      title: Text(url.split('/').last),
+                      onTap: () {
+                        // Add logic here to handle PDFs or other file types
+                      },
                     ),
                   );
                 }).toList(),

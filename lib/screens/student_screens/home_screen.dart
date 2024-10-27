@@ -8,10 +8,12 @@ import 'package:school_erp/screens/attendance/attendance_screen.dart';
 import 'package:school_erp/screens/events/events_screen.dart';
 import 'package:school_erp/screens/fees_due_screen.dart';
 import 'package:school_erp/screens/student_screens/settings_screen.dart';
+import 'package:school_erp/screens/student_screens/view_marks.dart';
 
 import '../../model/user_model.dart';
 import '../../reusable_widgets/home_screen_cards/master_card.dart';
 import '../../reusable_widgets/home_screen_cards/small_card.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -66,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
               fit: BoxFit.cover,
             ),
             SingleChildScrollView(
-              // Wrapped content with SingleChildScrollView
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -81,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "Hi,$username",
+                              "Hi, $username",
                               style: const TextStyle(
                                 fontSize: 30.0,
                                 fontWeight: FontWeight.w400,
@@ -106,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
                               child: Text(
-                                "classyear:$classyear",
+                                "classyear: $classyear",
                                 style: const TextStyle(
                                   color: Color(0xFF6184C7),
                                   fontSize: 14.0,
@@ -148,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => const AttendanceScreen(),
+                                    builder: (_) => const ViewAttendanceScreen(),
                                   ),
                                 );
                               },
@@ -167,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                               },
                               child: const HomeScreenMasterCard(
-                                tooltext: 'Check you fee due here ',
+                                tooltext: 'Check your fee due here ',
                                 attendance: false,
                               ),
                             ),
@@ -182,28 +183,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             HomeScreenSmallCard(
                               tooltext:
-                                  'Check out your marks by tapping the button',
+                              'Check out your marks by tapping the button',
                               icon: Icons.collections_bookmark_rounded,
                               buttonText: "Marks",
                               onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text(
-                                      "Feature coming soon...",
-                                      style: TextStyle(
-                                        fontSize: 14.0,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8.0)),
-                                    closeIconColor: Colors.white,
-                                    showCloseIcon: true,
-                                    behavior: SnackBarBehavior.floating,
-                                    backgroundColor: const Color(0xFF2855AE)
-                                        .withOpacity(0.9),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ViewMarksScreen(enrollmentNumber: enrollmentNumber),  // Navigate to the marks screen
                                   ),
                                 );
                               },
@@ -220,7 +207,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             HomeScreenSmallCard(
-                              tooltext: 'Feel free to ask doughts here ',
+                              tooltext: 'Feel free to ask doubts here ',
                               icon: Icons.chat,
                               buttonText: "Ask Doubts",
                               onTap: () => Navigator.push(
@@ -237,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => EventsScreen(),
+                                  builder: (_) => EventDisplayPage(),
                                 ),
                               ),
                             ),

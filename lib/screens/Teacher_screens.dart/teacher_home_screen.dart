@@ -11,6 +11,7 @@ import 'package:school_erp/screens/Teacher_screens.dart/teacher_attendance.dart'
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_change_password.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_profile_page.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_setting_screen.dart';
+import 'package:school_erp/screens/Teacher_screens.dart/upload_marks.dart';
 import 'package:school_erp/screens/events/events_screen.dart';
 import 'package:school_erp/screens/fees_due_screen.dart';
 import 'package:school_erp/screens/login_screens/user_screen.dart';
@@ -70,7 +71,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
               fit: BoxFit.cover,
             ),
             SingleChildScrollView(
-              // Wrapped content with SingleChildScrollView
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -110,7 +110,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
                               child: Text(
-                                "classteacher of:$classyear-$section",
+                                "Class Teacher of: $classyear-$section",
                                 style: const TextStyle(
                                   color: Color(0xFF6184C7),
                                   fontSize: 14.0,
@@ -152,13 +152,13 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => const TeacherAttendance(),
+                                    builder: (_) => const UploadAttendanceScreen(),
                                   ),
                                 );
                               },
                               child: const HomeScreenMasterCard(
                                 attendance: true,
-                                tooltext: 'students attendance',
+                                tooltext: 'Students Attendance',
                               ),
                             ),
                             GestureDetector(
@@ -171,7 +171,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                                 );
                               },
                               child: const HomeScreenMasterCard(
-                                tooltext: 'Check you fee due here ',
+                                tooltext: 'Check your fee due here ',
                                 attendance: false,
                               ),
                             ),
@@ -185,29 +185,14 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                           spacing: 20.0,
                           children: [
                             HomeScreenSmallCard(
-                              tooltext:
-                                  'Check out your marks by tapping the button',
+                              tooltext: 'Check out your marks by tapping the button',
                               icon: Icons.collections_bookmark_rounded,
                               buttonText: "Marks",
                               onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: const Text(
-                                      "Feature coming soon...",
-                                      style: TextStyle(
-                                        fontSize: 14.0,
-                                        fontWeight: FontWeight.w500,
-                                        color: Colors.white70,
-                                      ),
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8.0)),
-                                    closeIconColor: Colors.white,
-                                    showCloseIcon: true,
-                                    behavior: SnackBarBehavior.floating,
-                                    backgroundColor: const Color(0xFF2855AE)
-                                        .withOpacity(0.9),
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const UploadMarksScreen(),  // Navigate to the marks screen
                                   ),
                                 );
                               },
@@ -219,7 +204,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => EventsScreen(),
+                                  builder: (_) => EventDisplayPage(),
                                 ),
                               ),
                             ),

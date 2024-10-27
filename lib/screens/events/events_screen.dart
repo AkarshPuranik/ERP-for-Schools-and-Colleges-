@@ -1,68 +1,116 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:school_erp/screens/events/event.dart';
-import 'package:school_erp/screens/events/event_detail_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
-class EventsScreen extends StatefulWidget {
-  @override
-  _EventsScreenState createState() => _EventsScreenState();
-}
-
-class _EventsScreenState extends State<EventsScreen> {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-  Future<List<Event>> fetchEvents() async {
-    QuerySnapshot snapshot = await _firestore.collection('events').get();
-    return snapshot.docs
-        .map((doc) => Event.fromMap(doc.data() as Map<String, dynamic>))
-        .toList();
-  }
+class EventDisplayPage extends StatelessWidget {
+  const EventDisplayPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Events"),
-      ),
-      body: FutureBuilder<List<Event>>(
-        future: fetchEvents(),
+      appBar: AppBar(title: const Text('Events')),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('events').snapshots(),
         builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Error: ${snapshot.error}"));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text("No events found"));
-          } else {
-            return ListView.builder(
-              itemCount: snapshot.data!.length,
-              itemBuilder: (context, index) {
-                final event = snapshot.data![index];
-                return ListTile(
-                  title: Text(event.title),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(event.description),
-                      Text(
-                        "${event.date.toLocal()}".split(' ')[0],
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EventDetailScreen(event: event),
-                      ),
-                    );
-                  },
-                );
-              },
-            );
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
           }
+
+          final events = snapshot.data!.docs.map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            final title = data['title'] ?? 'No Title';
+            final description = data['description'] ?? 'No Description';
+            final date = (data['date'] as Timestamp).toDate();
+            final imageUrl = data['imageUrl'];
+
+            return Card(
+              margin: const EdgeInsets.all(8.0),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Date: ${DateFormat('yyyy-MM-dd').format(date)}',
+                      style: const TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(description),
+                    const SizedBox(height: 16),
+                    if (imageUrl != null)
+                      GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ImageViewer(url: imageUrl),
+                          ),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8.0),
+                          child: Image.network(
+                            imageUrl,
+                            height: 150,
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, progress) {
+                              return progress == null
+                                  ? child
+                                  : const Center(child: CircularProgressIndicator());
+                            },
+                            errorBuilder: (context, error, stackTrace) {
+                              return const Icon(Icons.broken_image, size: 50, color: Colors.grey);
+                            },
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          }).toList();
+
+          return ListView(children: events);
         },
+      ),
+    );
+  }
+}
+
+// Full-screen image viewer widget
+class ImageViewer extends StatelessWidget {
+  final String url;
+
+  const ImageViewer({Key? key, required this.url}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Center(
+        child: InteractiveViewer(
+          child: Image.network(
+            url,
+            fit: BoxFit.contain,
+            loadingBuilder: (context, child, progress) {
+              return progress == null
+                  ? child
+                  : const Center(child: CircularProgressIndicator());
+            },
+            errorBuilder: (context, error, stackTrace) {
+              return const Center(
+                child: Icon(Icons.broken_image, size: 100, color: Colors.grey),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
