@@ -2,6 +2,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_indicator/loading_indicator.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_create_account.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_home_screen.dart';
 import 'package:school_erp/screens/login_screens/signup_screen.dart';
@@ -286,12 +287,35 @@ class _UserScreenState extends State<UserScreen> {
               //     style: TextStyle(color: Colors.blue),
               //   ),
               // ),
-              ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : const Text('Login'),
-              ),
+              ZoomIn(
+                duration: Duration(seconds: 2),
+                child: ElevatedButton(
+                  style: ButtonStyle(
+                      backgroundColor: WidgetStateProperty.all(
+                        const Color.fromARGB(255, 135, 180, 236),
+                      ),
+                      foregroundColor: WidgetStateProperty.all(Colors.black)),
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading
+                      ? SizedBox(
+                          width: 24, // Set the width of the loading indicator
+                          height: 24, // Set the height of the loading indicator
+                          child: LoadingIndicator(
+                            indicatorType: Indicator
+                                .ballPulse, // Use the ballPulse indicator
+                            colors: [
+                              Colors.red,
+                              Colors.green,
+                              Colors.blue
+                            ], // Customize the color
+                            strokeWidth: 2, // Set the stroke width
+                            backgroundColor:
+                                Colors.transparent, // Set background color
+                          ),
+                        )
+                      : const Text('Login'),
+                ),
+              )
             ],
           ),
         ),
