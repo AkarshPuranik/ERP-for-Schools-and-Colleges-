@@ -30,9 +30,16 @@ class _HomeScreenState extends State<HomeScreen> {
   String enrollmentNumber = '';
   String classyear = '';
   String _profileImageUrl = '';
-  // String _attendance = '';
   String _feesDue = '';
   String _section = '';
+  double _overallAttendancePercentage =
+      0.0; // New variable to store overall percentage
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfile();
+  }
 
   Future<void> _fetchUserProfile() async {
     final userDocRef = FirebaseFirestore.instance
@@ -54,7 +61,39 @@ class _HomeScreenState extends State<HomeScreen> {
         _section = userData['section'];
       });
       await _fetchFeesDue(enrollmentNumber);
+      await _fetchOverallAttendance(
+          enrollmentNumber); // Fetch overall attendance percentage
     }
+  }
+
+  Future<void> _fetchOverallAttendance(String enrollmentNumber) async {
+    final subjects = ['Hindi', 'Math', 'Science', 'Social', 'English'];
+    int totalClasses = 0;
+    int attendedClasses = 0;
+
+    for (String subject in subjects) {
+      final attendanceCollection = FirebaseFirestore.instance
+          .collection('attendance')
+          .doc(enrollmentNumber)
+          .collection(subject);
+
+      final attendanceDocs = await attendanceCollection.get();
+
+      print(
+          'Subject: $subject, Documents Count: ${attendanceDocs.docs.length}'); // Debugging line
+
+      totalClasses += attendanceDocs.docs.length;
+      attendedClasses +=
+          attendanceDocs.docs.where((doc) => doc['status'] == 'Present').length;
+    }
+
+    print(
+        'Total Classes: $totalClasses, Attended Classes: $attendedClasses'); // Debugging line
+
+    setState(() {
+      _overallAttendancePercentage =
+          totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0.0;
+    });
   }
 
   Future<void> _fetchFeesDue(String enrollmentNumber) async {
@@ -82,12 +121,6 @@ class _HomeScreenState extends State<HomeScreen> {
       });
       print("No fees data found for enrollment number: $enrollmentNumber");
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserProfile();
   }
 
   @override
@@ -142,7 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
                               child: Text(
-                                "Class:$classyear$_section",
+                                "Class: $classyear$_section",
                                 style: const TextStyle(
                                   color: Color(0xFF6184C7),
                                   fontSize: 14.0,
@@ -187,13 +220,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onTap: () {
                                   Navigator.of(context).push(
                                       PageAnimationTransition(
-                                          page: const ViewAttendanceScreen(),
+                                          page: AttendanceScreen(
+                                              enrollmentNumber:
+                                                  enrollmentNumber),
                                           pageAnimationType:
                                               FadeAnimationTransition()));
                                 },
                                 child: BounceInLeft(
-                                  child: const HomeScreenMasterCard(
-                                    attendancepercentage: '80%',
+                                  child: HomeScreenMasterCard(
+                                    attendancepercentage:
+                                        '${_overallAttendancePercentage.toStringAsFixed(2)}%', // Display overall percentage
                                     attendance: true,
                                     tooltext: 'Check out your attendance here ',
                                   ),
@@ -250,48 +286,60 @@ class _HomeScreenState extends State<HomeScreen> {
                             BounceInDown(
                               child: ZoomTapAnimation(
                                 child: HomeScreenSmallCard(
-                                    tooltext: 'Submit your assignments here ',
-                                    icon: Icons.person,
+                                    tooltext: 'Submit your assignments',
+                                    icon: Icons.assignment,
                                     buttonText: "Assignments",
-                                    onTap: () => Navigator.of(context).push(
-                                        PageAnimationTransition(
-                                            page: AssignmentScreen(),
-                                            pageAnimationType:
-                                                BottomToTopFadedTransition()))),
+                                    onTap: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const AssignmentScreen(),
+                                        ),
+                                      );
+                                    }),
                               ),
                             ),
-                            BounceInUp(
+                            BounceInDown(
                               child: ZoomTapAnimation(
                                 child: HomeScreenSmallCard(
-                                    tooltext: 'Feel free to ask doughts here ',
-                                    icon: Icons.chat,
-                                    buttonText: "Ask Doubts",
-                                    onTap: () => Navigator.of(context).push(
-                                        PageAnimationTransition(
-                                            page: const AskDoubtScreen(),
-                                            pageAnimationType:
-                                                BottomToTopFadedTransition()))),
+                                  tooltext: 'Have any doubt? Ask here!',
+                                  icon: Icons.question_answer,
+                                  buttonText: "Ask Doubt",
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => const AskDoubtScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
-                            BounceInUp(
+                            BounceInDown(
                               child: ZoomTapAnimation(
                                 child: HomeScreenSmallCard(
-                                    tooltext: 'Checkout all the events here ',
-                                    icon: Icons.edit_calendar_rounded,
-                                    buttonText: "Events",
-                                    onTap: () => Navigator.of(context).push(
-                                        PageAnimationTransition(
-                                            page: EventDisplayPage(),
-                                            pageAnimationType:
-                                                BottomToTopFadedTransition()))),
+                                  tooltext: 'Stay updated with events',
+                                  icon: Icons.event,
+                                  buttonText: "Events",
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const EventDisplayPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ],
-                        ),
-                        const SizedBox(height: 20.0),
+                        )
                       ],
                     ),
-                  ),
+                  )
                 ],
               ),
             ),

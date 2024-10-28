@@ -1,201 +1,129 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fl_chart/fl_chart.dart';
 
-class ViewAttendanceScreen extends StatefulWidget {
-  const ViewAttendanceScreen({super.key});
+class AttendanceScreen extends StatelessWidget {
+  final String enrollmentNumber;
 
-  @override
-  State<ViewAttendanceScreen> createState() => _ViewAttendanceScreenState();
-}
-
-class _ViewAttendanceScreenState extends State<ViewAttendanceScreen> {
-  final CollectionReference attendanceCollection =
-  FirebaseFirestore.instance.collection('attendance');
-
-  Map<String, List<Map<String, dynamic>>> _groupedAttendance = {};
-  Map<String, double> _subjectAttendancePercentage = {}; // Stores attendance percentage per subject
-  bool _isLoading = false;
-  bool _hasSearched = false;
-  String? enrollmentNumber;
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUserEnrollment(); // Fetch user data when screen is initialized
-  }
-
-  Future<void> _fetchUserEnrollment() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      User? currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(currentUser.uid)
-            .get();
-
-        if (userDoc.exists && userDoc.data() != null) {
-          Map<String, dynamic> userData = userDoc.data() as Map<String, dynamic>;
-          if (userData.containsKey('enrollment_number')) {
-            enrollmentNumber = userData['enrollment_number'];
-
-            // Fetch attendance for the user if enrollment number exists
-            if (enrollmentNumber != null && enrollmentNumber!.isNotEmpty) {
-              await _fetchStudentAttendance(enrollmentNumber!);
-            } else {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("Enrollment number not found in user profile")),
-              );
-            }
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("Field 'enrollment_number' not found in user document")),
-            );
-          }
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("User profile not found in Firestore")),
-          );
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("User not logged in")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error fetching user profile: $e")),
-      );
-    }
-
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
-  String capitalize(String status) {
-    return status.isNotEmpty
-        ? status[0].toUpperCase() + status.substring(1).toLowerCase()
-        : status;
-  }
-
-  Future<void> _fetchStudentAttendance(String enrollmentNumber) async {
-    setState(() {
-      _isLoading = true;
-      _hasSearched = true;
-    });
-
-    try {
-      QuerySnapshot snapshot = await attendanceCollection
-          .where('enrollment', isEqualTo: enrollmentNumber)
-          .get();
-
-      if (snapshot.docs.isEmpty) {
-        print("No attendance records found for this enrollment number.");
-      }
-
-      Map<String, List<Map<String, dynamic>>> groupedAttendance = {};
-      Map<String, int> totalClassesPerSubject = {}; // Total classes per subject
-      Map<String, int> attendedClassesPerSubject = {}; // Attended classes per subject
-
-      for (var doc in snapshot.docs) {
-        Map<String, dynamic> attendanceData = doc.data() as Map<String, dynamic>;
-        String subject = attendanceData['subject'] ?? 'Unknown';
-        String status = attendanceData['status']?.toString().trim().toLowerCase() ?? '';
-        String date = attendanceData['date'] ?? '';
-
-        // Group by subject
-        if (!groupedAttendance.containsKey(subject)) {
-          groupedAttendance[subject] = [];
-          totalClassesPerSubject[subject] = 0;
-          attendedClassesPerSubject[subject] = 0;
-        }
-
-        groupedAttendance[subject]?.add({
-          'date': date,
-          'status': capitalize(status), // Capitalize the status before adding
-        });
-
-        totalClassesPerSubject[subject] = totalClassesPerSubject[subject]! + 1;
-
-        if (status == 'present') {
-          attendedClassesPerSubject[subject] = attendedClassesPerSubject[subject]! + 1;
-        }
-      }
-
-      // Calculate the attendance percentage for each subject
-      Map<String, double> subjectAttendancePercentage = {};
-      totalClassesPerSubject.forEach((subject, totalClasses) {
-        int attendedClasses = attendedClassesPerSubject[subject] ?? 0;
-        double percentage = totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0.0;
-        subjectAttendancePercentage[subject] = percentage;
-      });
-
-      setState(() {
-        _groupedAttendance = groupedAttendance;
-        _subjectAttendancePercentage = subjectAttendancePercentage;
-        _isLoading = false;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error fetching attendance: $e")),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
+  const AttendanceScreen({Key? key, required this.enrollmentNumber})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("View Attendance"),
+        title: const Text('Attendance Records'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            if (_isLoading) const CircularProgressIndicator(),
-            if (_hasSearched && !_isLoading && _groupedAttendance.isNotEmpty)
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _groupedAttendance.keys.length,
-                  itemBuilder: (context, index) {
-                    String subject = _groupedAttendance.keys.elementAt(index);
-                    List<Map<String, dynamic>> attendanceRecords =
-                    _groupedAttendance[subject]!;
-                    double subjectPercentage = _subjectAttendancePercentage[subject] ?? 0.0;
+      body: FutureBuilder<Map<String, AttendanceData>>(
+        future: _fetchAllAttendance(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No attendance records found.'));
+          }
 
-                    return ExpansionTile(
-                      title: Text("Subject: $subject"),
-                      subtitle: Text(
-                        "Attendance Percentage: ${subjectPercentage.toStringAsFixed(2)}%",
-                        style: const TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
-                        ),
+          final attendanceData = snapshot.data!;
+          return ListView(
+            children: attendanceData.entries.map((entry) {
+              final subject = entry.key;
+              final data = entry.value;
+
+              return ExpansionTile(
+                title: Text(subject),
+                children: [
+                  // Smaller Pie chart for attendance percentage
+                  Container(
+                    height: 150, // Decreased height
+                    child: PieChart(
+                      PieChartData(
+                        sections: [
+                          PieChartSectionData(
+                            value: data.percentage,
+                            color: Colors.green,
+                            title: '${data.percentage.toStringAsFixed(1)}%',
+                            radius: 50, // Smaller radius
+                          ),
+                          PieChartSectionData(
+                            value: 100 - data.percentage,
+                            color: Colors.red,
+                            title:
+                                '${(100 - data.percentage).toStringAsFixed(1)}%',
+                            radius: 50, // Smaller radius
+                          ),
+                        ],
                       ),
-                      children: attendanceRecords.map((record) {
-                        return ListTile(
-                          title: Text("Date: ${record['date']}"),
-                          subtitle: Text("Status: ${capitalize(record['status'])}"),
-                        );
-                      }).toList(),
+                    ),
+                  ),
+                  // Attendance records list
+                  ...data.records.map((record) {
+                    return ListTile(
+                      title: Text('Date: ${record['date']}'),
+                      subtitle: Text('Status: ${record['status']}'),
                     );
-                  },
-                ),
-              ),
-            if (_hasSearched && !_isLoading && _groupedAttendance.isEmpty)
-              const Text("No attendance records found."),
-          ],
-        ),
+                  }).toList(),
+                ],
+              );
+            }).toList(),
+          );
+        },
       ),
     );
   }
+
+  // Fetch all attendance records for the given enrollment number
+  Future<Map<String, AttendanceData>> _fetchAllAttendance() async {
+    final subjects = ['Hindi', 'Maths', 'Science', 'Social', 'English'];
+    Map<String, AttendanceData> allAttendance = {};
+
+    for (String subject in subjects) {
+      try {
+        // Access the correct document for the enrollment number and subject
+        final attendanceCollection = FirebaseFirestore.instance
+            .collection('attendance')
+            .doc(enrollmentNumber)
+            .collection(subject);
+
+        final attendanceDocs = await attendanceCollection.get();
+
+        // Prepare to calculate attendance percentage
+        int totalClasses = attendanceDocs.docs.length;
+        int attendedClasses = 0;
+
+        // Map the documents to the required format
+        List<Map<String, String>> records = attendanceDocs.docs.map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          final status = data['status']?.toString() ?? 'Absent';
+          if (status.toLowerCase() == 'present') {
+            attendedClasses++;
+          }
+          return {
+            'date': doc.id, // Use the document ID as the date
+            'status': status,
+          };
+        }).toList();
+
+        // Calculate the attendance percentage
+        double percentage =
+            totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0.0;
+
+        // Store the data in the map
+        allAttendance[subject] = AttendanceData(records, percentage);
+      } catch (e) {
+        print('Error fetching attendance for $subject: $e');
+        allAttendance[subject] =
+            AttendanceData([], 0.0); // Ensure the subject key exists
+      }
+    }
+    return allAttendance;
+  }
+}
+
+class AttendanceData {
+  final List<Map<String, String>> records;
+  final double percentage;
+
+  AttendanceData(this.records, this.percentage);
 }
