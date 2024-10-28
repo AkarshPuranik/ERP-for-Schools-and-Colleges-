@@ -39,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _fetchUserProfile();
+    _fetchOverallAttendance(FirebaseAuth.instance.currentUser!.uid);
   }
 
   Future<void> _fetchUserProfile() async {
@@ -67,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchOverallAttendance(String enrollmentNumber) async {
-    final subjects = ['Hindi', 'Math', 'Science', 'Social', 'English'];
+    final subjects = ['Hindi', 'Maths', 'Science', 'Social', 'English'];
     int totalClasses = 0;
     int attendedClasses = 0;
 
@@ -79,20 +80,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final attendanceDocs = await attendanceCollection.get();
 
-      print(
-          'Subject: $subject, Documents Count: ${attendanceDocs.docs.length}'); // Debugging line
-
-      totalClasses += attendanceDocs.docs.length;
-      attendedClasses +=
-          attendanceDocs.docs.where((doc) => doc['status'] == 'Present').length;
+      totalClasses +=
+          attendanceDocs.docs.length; // Count total classes for the subject
+      attendedClasses += attendanceDocs.docs
+          .where((doc) => doc['status'] == 'Present')
+          .length; // Count attended classes
     }
 
-    print(
-        'Total Classes: $totalClasses, Attended Classes: $attendedClasses'); // Debugging line
-
+    // Calculate overall attendance percentage
     setState(() {
-      _overallAttendancePercentage =
-          totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0.0;
+      _overallAttendancePercentage = totalClasses > 0
+          ? (attendedClasses / totalClasses) * 100
+          : 0.0; // Avoid division by zero
     });
   }
 
@@ -229,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 child: BounceInLeft(
                                   child: HomeScreenMasterCard(
                                     attendancepercentage:
-                                        '${_overallAttendancePercentage.toStringAsFixed(2)}%', // Display overall percentage
+                                        '${_overallAttendancePercentage.toStringAsFixed(1)}%', // Display overall percentage
                                     attendance: true,
                                     tooltext: 'Check out your attendance here ',
                                   ),
