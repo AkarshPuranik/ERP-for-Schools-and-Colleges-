@@ -7,20 +7,25 @@ class AttendanceCard extends StatelessWidget {
   final int totalClasses;
   final int present;
   final int absent;
-  const AttendanceCard({super.key, required this.subject, required this.totalClasses, required this.present, required this.absent});
+  const AttendanceCard(
+      {super.key,
+      required this.subject,
+      required this.totalClasses,
+      required this.present,
+      required this.absent});
 
   @override
   Widget build(BuildContext context) {
-    String attendancePercentage = ((present / totalClasses) * 100).toStringAsFixed(0);
+    String attendancePercentage =
+        ((present / totalClasses) * 100).toStringAsFixed(0);
 
     return Container(
       width: MediaQuery.of(context).size.width,
       padding: const EdgeInsets.all(14.0),
       margin: const EdgeInsets.only(bottom: 14.0),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16.0),
-        border: Border.all(color: Colors.black54)
-      ),
+          borderRadius: BorderRadius.circular(16.0),
+          border: Border.all(color: Colors.black54)),
       child: Row(
         mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -32,7 +37,8 @@ class AttendanceCard extends StatelessWidget {
             percent: totalClasses == 0 ? 0 : present / totalClasses,
             center: Text(
               "${totalClasses == 0 ? 0 : attendancePercentage}%",
-              style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 13.0),
+              style:
+                  const TextStyle(fontWeight: FontWeight.w500, fontSize: 13.0),
             ),
             circularStrokeCap: CircularStrokeCap.round,
             progressColor: Colors.purple,
