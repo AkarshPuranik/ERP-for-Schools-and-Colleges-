@@ -11,7 +11,7 @@ class UploadAttendanceScreen extends StatefulWidget {
 
 class _UploadAttendanceScreenState extends State<UploadAttendanceScreen> {
   final CollectionReference attendanceCollection =
-  FirebaseFirestore.instance.collection('attendance');
+      FirebaseFirestore.instance.collection('attendance');
 
   final TextEditingController _enrollmentController = TextEditingController();
   final TextEditingController _classController = TextEditingController();
@@ -48,14 +48,26 @@ class _UploadAttendanceScreenState extends State<UploadAttendanceScreen> {
     });
 
     try {
-      await attendanceCollection.add({
-        'subject': _selectedSubject, // Selected subject from dropdown
-        'enrollment': _enrollmentController.text,
-        'status': _attendanceStatus?.trim(), // Store capitalized attendance status
-        'date': DateFormat('yyyy-MM-dd').format(_selectedDate), // Use selected date
+      final String enrollmentNumber = _enrollmentController.text;
+      final String subject = _selectedSubject!;
+      final String formattedDate =
+          DateFormat('yyyy-MM-dd').format(_selectedDate);
+
+      // Reference to the document with the enrollment number
+      final DocumentReference enrollmentDoc =
+          attendanceCollection.doc(enrollmentNumber);
+
+      // Reference to the specific subject's subcollection
+      final CollectionReference subjectCollection =
+          enrollmentDoc.collection(subject);
+
+      // Add the attendance record for the selected subject on the specified date
+      await subjectCollection.doc(formattedDate).set({
+        'status': _attendanceStatus?.trim(),
         'class': _classController.text,
         'section': _sectionController.text,
-      });
+        'date': formattedDate, // Store date as a field for easy querying
+      }, SetOptions(merge: true)); // Use merge to avoid overwriting data
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Attendance uploaded successfully!")),
@@ -216,9 +228,9 @@ class _UploadAttendanceScreenState extends State<UploadAttendanceScreen> {
             _isLoading
                 ? const CircularProgressIndicator()
                 : ElevatedButton(
-              onPressed: _uploadAttendance,
-              child: const Text("Upload Attendance"),
-            ),
+                    onPressed: _uploadAttendance,
+                    child: const Text("Upload Attendance"),
+                  ),
           ],
         ),
       ),
