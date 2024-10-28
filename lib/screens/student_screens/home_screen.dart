@@ -255,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     buttonText: "Assignments",
                                     onTap: () => Navigator.of(context).push(
                                         PageAnimationTransition(
-                                            page: const AssignmentScreen(),
+                                            page: AssignmentScreen(),
                                             pageAnimationType:
                                                 BottomToTopFadedTransition()))),
                               ),

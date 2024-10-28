@@ -1,11 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:school_erp/components/custom_appbar.dart';
-import 'package:school_erp/components/star_background.dart';
-import 'package:school_erp/constants/colors.dart';
-import 'package:school_erp/model/assignment_screen_model.dart';
-
-import '../reusable_widgets/assignment_card.dart';
+import 'package:school_erp/reusable_widgets/assignment_card.dart';
 
 class AssignmentScreen extends StatefulWidget {
   const AssignmentScreen({super.key});
@@ -15,123 +11,140 @@ class AssignmentScreen extends StatefulWidget {
 }
 
 class _AssignmentScreenState extends State<AssignmentScreen> {
-  bool loading = true;
+  String _classyear = '';
+  String _section = '';
+  Map<String, List<Map<String, dynamic>>> subjectAssignments = {};
+  bool _isLoading = true; // Track loading state
 
-  CollectionReference firestore =
-      FirebaseFirestore.instance.collection('assignment');
-  List<AssignmentModel> assignmentList = [];
+  Future<void> _fetchUserProfile() async {
+    final userDocRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(FirebaseAuth.instance.currentUser!.uid)
+        .collection('profile_history')
+        .doc(FirebaseAuth.instance.currentUser!.uid);
+
+    final userDoc = await userDocRef.get();
+
+    if (userDoc.exists) {
+      final userData = userDoc.data() as Map<String, dynamic>;
+
+      setState(() {
+        _classyear = userData['class'];
+        _section = userData['section'];
+      });
+
+      await _fetchAssignments();
+    } else {
+      print("User profile does not exist.");
+    }
+  }
+
+  Future<void> _fetchAssignments() async {
+    final assignmentsDocRef = FirebaseFirestore.instance
+        .collection('assignments')
+        .doc('$_classyear$_section');
+
+    final assignmentsDoc = await assignmentsDocRef.get();
+
+    if (assignmentsDoc.exists) {
+      print("Document found for class-section: $_classyear$_section");
+
+      // Define subjects to fetch
+      final subjectsCollection = [
+        'Hindi',
+        'Maths',
+        'Science',
+        'Social',
+        'English'
+      ];
+
+      for (String subject in subjectsCollection) {
+        final subjectRef = assignmentsDocRef.collection(subject);
+        final subjectDocs = await subjectRef.get();
+
+        // Debugging output
+        print("Fetching data from subject: $subject");
+        print("Documents found: ${subjectDocs.docs.length}");
+
+        if (subjectDocs.docs.isNotEmpty) {
+          subjectAssignments[subject] = subjectDocs.docs
+              .map((doc) => doc.data() as Map<String, dynamic>)
+              .toList();
+        } else {
+          subjectAssignments[subject] = [];
+          print("No documents found for subject: $subject");
+        }
+      }
+    } else {
+      print("No document found for class-section: $_classyear$_section");
+    }
+
+    setState(() {
+      _isLoading = false; // Stop loading after fetching
+    });
+  }
 
   @override
   void initState() {
-    fetchData();
     super.initState();
-  }
-
-  Future<void> fetchData() async {
-    await firestore.get().then((value) => value.docs.forEach((element) {
-          setState(() {
-            assignmentList.add(
-              AssignmentModel(
-                subject: element['subject'],
-                topic: element['topic'],
-                assignDate: element['assign_date'],
-                lastDate: element['last_date'],
-                isSubmitted: element['submitted'],
-              ),
-            );
-          });
-          debugPrint("EventList: ${assignmentList.toString()}");
-          debugPrint("EventList: ${assignmentList[0].subject}");
-        }));
-    setState(() {
-      loading = false;
-    });
-    // final allData = querySnapshot.docs.map((doc) => doc.data());
+    _fetchUserProfile();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF7292CF),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            const StarBackground(),
-            Column(
-              children: [
-                const CustomAppBar(title: "Assignment"),
-                Expanded(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      width: MediaQuery.of(context).size.width,
-                      height: MediaQuery.of(context).size.height,
-                      margin: const EdgeInsets.only(top: 30.0),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(20.0),
-                            topLeft: Radius.circular(20.0)),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: loading
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  color: primaryColor,
-                                ),
-                              )
-                            : Column(
-                                children: [
-                                  ListView.builder(
-                                    shrinkWrap: true,
-                                    itemCount: assignmentList.length,
-                                    itemBuilder: (context, index) {
-                                      return AssignmentCard(
-                                        subject: assignmentList[index].subject,
-                                        chapter: assignmentList[index].topic,
-                                        assignDate:
-                                            assignmentList[index].assignDate,
-                                        submissionDate:
-                                            assignmentList[index].lastDate,
-                                        submitted:
-                                            assignmentList[index].isSubmitted,
-                                      );
-                                    },
-                                  ),
-                                  // const AssignmentCard(
-                                  //     subject: "Mathematics",
-                                  //     assignDate: "2 Jan 2024",
-                                  //     submissionDate: "10 March 24",
-                                  //     chapter: "Surface Areas and Volumes"),
-                                  // AssignmentCard(
-                                  //     subject: "Science",
-                                  //     assignDate: "10 Jan 2024",
-                                  //     submissionDate: "15 March 24",
-                                  //     paymentMode: "Online",
-                                  //     chapter: "Structure of Atoms"),
-                                  // AssignmentCard(
-                                  //     subject: "English",
-                                  //     assignDate: "20 Jan 2024",
-                                  //     submissionDate: "17 March 24",
-                                  //     paymentMode: "Card",
-                                  //     chapter: "My Bestfriend Essay"),
-                                  // AssignmentCard(
-                                  //     subject: "English",
-                                  //     assignDate: "20 Jan 2024",
-                                  //     submissionDate: "17 March 24",
-                                  //     paymentMode: "Card",
-                                  //     chapter: "My Bestfriend Essay"),
-                                ],
-                              ),
-                      ),
-                    ),
-                  ),
-                )
-              ],
-            ),
-          ],
-        ),
+      appBar: AppBar(
+        title: Text('Assignments of $_classyear$_section'),
       ),
+      body: _isLoading
+          ? Center(child: CircularProgressIndicator()) // Show loading indicator
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: subjectAssignments.keys.map((subject) {
+                    return Card(
+                      margin: EdgeInsets.symmetric(vertical: 8.0),
+                      elevation: 4,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  subject,
+                                  style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Icon(Icons.assignment, color: Colors.blue),
+                              ],
+                            ),
+                            SizedBox(height: 10),
+                            Divider(),
+                            ...subjectAssignments[subject]!.isEmpty
+                                ? [Text('No assignments found for $subject.')]
+                                : subjectAssignments[subject]!
+                                    .map((assignment) {
+                                    return AssignmentCard(
+                                      description:
+                                          assignment['description'] ?? 'N/A',
+                                      subject: assignment['subject'] ?? "N/A",
+                                      deadline: assignment['deadline'] ?? "N/A",
+                                      onTapSubmit: () {},
+                                    );
+                                  }).toList(),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
     );
   }
 }
