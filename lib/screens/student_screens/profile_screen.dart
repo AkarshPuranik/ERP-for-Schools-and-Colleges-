@@ -22,17 +22,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Controllers for user input fields
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _enrollmentController = TextEditingController();
-  final TextEditingController _sectionController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _fatherNameController = TextEditingController();
   final TextEditingController _motherNameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
-  final TextEditingController _classController = TextEditingController();
 
   final ImagePicker _picker = ImagePicker(); // Image picker
   User? _currentUser; // Firebase user
   bool _isLoading = false; // Loading state
+
+  String? _selectedClass; // Selected class
+  String? _selectedSection; // Selected section
+
+  final List<String> classes =
+      List.generate(12, (index) => (index + 1).toString());
+  final List<String> sections = ['A', 'B', 'C', 'D'];
 
   @override
   void initState() {
@@ -45,13 +50,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Dispose of the controllers
     _nameController.dispose();
     _enrollmentController.dispose();
-    _sectionController.dispose();
     _dobController.dispose();
     _contactController.dispose();
     _fatherNameController.dispose();
     _motherNameController.dispose();
     _addressController.dispose();
-    _classController.dispose();
     super.dispose();
   }
 
@@ -83,13 +86,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             // Populate text fields
             _nameController.text = userData['name'] ?? '';
             _enrollmentController.text = userData['enrollmentNumber'] ?? '';
-            _sectionController.text = userData['section'] ?? '';
+            _selectedClass = userData['class'] ?? '';
+            _selectedSection = userData['section'] ?? '';
             _dobController.text = userData['dateOfBirth'] ?? '';
             _contactController.text = userData['contactNumber'] ?? '';
             _fatherNameController.text = userData['fatherName'] ?? '';
             _motherNameController.text = userData['motherName'] ?? '';
             _addressController.text = userData['address'] ?? '';
-            _classController.text = userData['class'] ?? '';
           });
         } else {
           print("No document found for the current user.");
@@ -149,13 +152,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await userDocRef.set({
         'name': _nameController.text,
         'enrollmentNumber': _enrollmentController.text,
-        'section': _sectionController.text,
+        'section': _selectedSection,
         'dateOfBirth': _dobController.text,
         'contactNumber': _contactController.text,
         'fatherName': _fatherNameController.text,
         'motherName': _motherNameController.text,
         'address': _addressController.text,
-        'class': _classController.text,
+        'class': _selectedClass,
         'profileImageUrl': _profileImageUrl,
       });
 
@@ -170,13 +173,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _validateFields() {
     if (_nameController.text.isEmpty ||
         _enrollmentController.text.isEmpty ||
-        _sectionController.text.isEmpty ||
+        _selectedClass == null ||
+        _selectedSection == null ||
         _dobController.text.isEmpty ||
         _contactController.text.isEmpty ||
         _fatherNameController.text.isEmpty ||
         _motherNameController.text.isEmpty ||
-        _addressController.text.isEmpty ||
-        _classController.text.isEmpty) {
+        _addressController.text.isEmpty) {
       return false;
     }
     return true;
@@ -252,7 +255,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Profile"),
+        title: const Text("Edit Profile"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -311,78 +314,110 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           : Icon(Icons.add_a_photo, size: 30),
                 ),
               ),
+
               const SizedBox(height: 20),
 
-              // User input fields
-              TextFormField(
+              // Text fields and dropdowns for profile
+              TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(
                   labelText: 'Name',
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 10),
-              TextFormField(
+              const SizedBox(height: 20),
+
+              TextField(
                 controller: _enrollmentController,
                 decoration: const InputDecoration(
                   labelText: 'Enrollment Number',
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _classController,
+              const SizedBox(height: 20),
+
+              // Dropdown for Class
+              DropdownButtonFormField<String>(
+                value: _selectedClass,
                 decoration: const InputDecoration(
-                  labelText: 'class',
+                  labelText: 'Class',
                   border: OutlineInputBorder(),
                 ),
+                items: classes.map((String classItem) {
+                  return DropdownMenuItem<String>(
+                    value: classItem,
+                    child: Text(classItem),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedClass = newValue;
+                  });
+                },
               ),
               const SizedBox(height: 20),
-              TextFormField(
-                controller: _sectionController,
+
+              // Dropdown for Section
+              DropdownButtonFormField<String>(
+                value: _selectedSection,
                 decoration: const InputDecoration(
-                  labelText: 'section',
+                  labelText: 'Section',
                   border: OutlineInputBorder(),
                 ),
+                items: sections.map((String sectionItem) {
+                  return DropdownMenuItem<String>(
+                    value: sectionItem,
+                    child: Text(sectionItem),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedSection = newValue;
+                  });
+                },
               ),
-              const SizedBox(height: 10),
-              TextFormField(
+              const SizedBox(height: 20),
+
+              // Date of Birth field
+              TextField(
                 controller: _dobController,
+                readOnly: true,
                 decoration: const InputDecoration(
                   labelText: 'Date of Birth',
                   border: OutlineInputBorder(),
-                  suffixIcon: Icon(Icons
-                      .calendar_today), // Calendar icon to indicate date picker
                 ),
-                readOnly: true, // Make the field read-only
-                onTap: _showDatePickerDialog, // Show date picker dialog
+                onTap: _showDatePickerDialog, // Show date picker on tap
               ),
-              const SizedBox(height: 10),
-              TextFormField(
+              const SizedBox(height: 20),
+
+              TextField(
                 controller: _contactController,
                 decoration: const InputDecoration(
                   labelText: 'Contact Number',
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 10),
-              TextFormField(
+              const SizedBox(height: 20),
+
+              TextField(
                 controller: _fatherNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Father\'s Name',
+                  labelText: 'Father Name',
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 10),
-              TextFormField(
+              const SizedBox(height: 20),
+
+              TextField(
                 controller: _motherNameController,
                 decoration: const InputDecoration(
-                  labelText: 'Mother\'s Name',
+                  labelText: 'Mother Name',
                   border: OutlineInputBorder(),
                 ),
               ),
-              const SizedBox(height: 10),
-              TextFormField(
+              const SizedBox(height: 20),
+
+              TextField(
                 controller: _addressController,
                 decoration: const InputDecoration(
                   labelText: 'Address',
@@ -390,60 +425,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Center(
-                child: GestureDetector(
-                  onTap: () async {
-                    if (_validateFields()) {
-                      // Show confirmation dialog
-                      bool? confirm = await _showConfirmationDialog();
-                      if (confirm == true) {
-                        await _storeUserProfile(); // Store user profile on save
-                        Navigator.pop(context, {
-                          'username': _nameController.text,
-                          'enrollmentNumber': _enrollmentController.text,
-                          'classyear': _classController.text,
-                        });
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Please fill all fields."),
-                        ),
-                      );
+
+              ElevatedButton(
+                onPressed: () async {
+                  if (_validateFields()) {
+                    final confirmed = await _showConfirmationDialog();
+                    if (confirmed == true) {
+                      _storeUserProfile(); // Store user profile data
                     }
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(
-                        left: 140,
-                        right: 140,
-                        top: 10,
-                        bottom: 10), // Add some margin around the button
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6.0, vertical: 7.0), // Reduce the padding
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(
-                          20.0), // Reduce the border radius
-                      color: const Color.fromARGB(255, 214, 174, 222),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment
-                          .center, // Center the text horizontally
-                      children: [
-                        Icon(Icons.check, size: 18.0), // Reduce the icon size
-                        const SizedBox(
-                            width:
-                                2.0), // Reduce the space between the icon and the text
-                        Text("DONE",
-                            style: TextStyle(
-                                fontSize: 14,
-                                fontWeight:
-                                    FontWeight.bold)), // Reduce the text size
-                      ],
-                    ),
-                  ),
-                ),
+                  } else {
+                    // Show an error message if validation fails
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text("Please fill all fields")),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color.fromARGB(255, 42, 134, 209),
+                    foregroundColor: Colors.white),
+                child: _isLoading
+                    ? const CircularProgressIndicator() // Show loading indicator
+                    : const Text("Save"),
               ),
-              // Save button
             ],
           ),
         ),

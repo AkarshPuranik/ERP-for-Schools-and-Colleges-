@@ -7,6 +7,7 @@ import 'package:school_erp/model/user_model.dart';
 import 'package:school_erp/reusable_widgets/home_screen_cards/master_card.dart';
 import 'package:school_erp/reusable_widgets/home_screen_cards/small_card.dart';
 import 'package:school_erp/reusable_widgets/loader.dart';
+import 'package:school_erp/screens/Teacher_screens.dart/Add_assignment_screen.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_attendance.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_change_password.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_profile_page.dart';
@@ -152,7 +153,8 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => const UploadAttendanceScreen(),
+                                    builder: (_) =>
+                                        const UploadAttendanceScreen(),
                                   ),
                                 );
                               },
@@ -185,17 +187,30 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                           spacing: 20.0,
                           children: [
                             HomeScreenSmallCard(
-                              tooltext: 'Check out your marks by tapping the button',
+                              tooltext:
+                                  'Check out your marks by tapping the button',
                               icon: Icons.collections_bookmark_rounded,
                               buttonText: "Marks",
                               onTap: () {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => const UploadMarksScreen(),  // Navigate to the marks screen
+                                    builder: (_) =>
+                                        const UploadMarksScreen(), // Navigate to the marks screen
                                   ),
                                 );
                               },
+                            ),
+                            HomeScreenSmallCard(
+                              tooltext: 'Sent assignments to students',
+                              icon: Icons.assignment,
+                              buttonText: "Assignments",
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => AddAssignmentScreen(),
+                                ),
+                              ),
                             ),
                             HomeScreenSmallCard(
                               tooltext: 'Checkout all the events here ',
