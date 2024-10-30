@@ -148,21 +148,27 @@ class _HomeScreenState extends State<HomeScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Hi, $username",
-                              style: const TextStyle(
-                                fontSize: 30.0,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white,
+                            ZoomIn(
+                              duration: Duration(seconds: 1),
+                              child: Text(
+                                "Hi, $username",
+                                style: const TextStyle(
+                                  fontSize: 30.0,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                            Text(
-                              "$enrollmentNumber",
-                              style: const TextStyle(
-                                color: Colors.white54,
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.w400,
-                                height: 1.0,
+                            ZoomIn(
+                              duration: Duration(seconds: 2),
+                              child: Text(
+                                "$enrollmentNumber",
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.0,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 20.0),
@@ -173,12 +179,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
-                              child: Text(
-                                "Class: $classyear$_section",
-                                style: const TextStyle(
-                                  color: Color(0xFF6184C7),
-                                  fontSize: 14.0,
-                                  fontWeight: FontWeight.w400,
+                              child: ZoomIn(
+                                duration: Duration(seconds: 3),
+                                child: Text(
+                                  "Class: $classyear$_section",
+                                  style: const TextStyle(
+                                    color: Color(0xFF6184C7),
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
                               ),
                             ),
@@ -299,7 +308,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     }),
                               ),
                             ),
-                            BounceInDown(
+                            BounceInUp(
                               child: ZoomTapAnimation(
                                 child: HomeScreenSmallCard(
                                   tooltext: 'Have any doubt? Ask here!',
@@ -316,7 +325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ),
-                            BounceInDown(
+                            BounceInUp(
                               child: ZoomTapAnimation(
                                 child: HomeScreenSmallCard(
                                   tooltext: 'Stay updated with events',

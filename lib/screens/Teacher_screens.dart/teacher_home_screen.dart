@@ -1,21 +1,16 @@
+import 'package:animate_do/animate_do.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
-import 'package:school_erp/constants/colors.dart';
-import 'package:school_erp/model/user_model.dart';
 import 'package:school_erp/reusable_widgets/home_screen_cards/master_card.dart';
 import 'package:school_erp/reusable_widgets/home_screen_cards/small_card.dart';
 import 'package:school_erp/reusable_widgets/loader.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/Add_assignment_screen.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_attendance.dart';
-import 'package:school_erp/screens/Teacher_screens.dart/teacher_change_password.dart';
-import 'package:school_erp/screens/Teacher_screens.dart/teacher_profile_page.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_setting_screen.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/upload_marks.dart';
 import 'package:school_erp/screens/events/events_screen.dart';
-import 'package:school_erp/screens/fees_due_screen.dart';
-import 'package:school_erp/screens/login_screens/user_screen.dart';
+import 'package:zoom_tap_animation/zoom_tap_animation.dart';
 
 class TeacherHomeScreen extends StatefulWidget {
   const TeacherHomeScreen({super.key});
@@ -85,21 +80,27 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "Hi,\n$username",
-                              style: const TextStyle(
-                                fontSize: 30.0,
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white,
+                            ZoomIn(
+                              duration: Duration(seconds: 1),
+                              child: Text(
+                                "Hi,\n$username",
+                                style: const TextStyle(
+                                  fontSize: 30.0,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
-                            Text(
-                              "$email",
-                              style: const TextStyle(
-                                color: Colors.white54,
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.w400,
-                                height: 1.0,
+                            ZoomIn(
+                              duration: Duration(seconds: 2),
+                              child: Text(
+                                "$email",
+                                style: const TextStyle(
+                                  color: Colors.white54,
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w400,
+                                  height: 1.0,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 20.0),
@@ -110,12 +111,15 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(20.0),
                               ),
-                              child: Text(
-                                "Class Teacher of: $classyear-$section",
-                                style: const TextStyle(
-                                  color: Color(0xFF6184C7),
-                                  fontSize: 14.0,
-                                  fontWeight: FontWeight.w400,
+                              child: ZoomIn(
+                                duration: Duration(seconds: 3),
+                                child: Text(
+                                  "Class Teacher of: $classyear-$section",
+                                  style: const TextStyle(
+                                    color: Color(0xFF6184C7),
+                                    fontSize: 14.0,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
                               ),
                             ),
@@ -144,41 +148,6 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
                       children: [
-                        const SizedBox(height: 30.0),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        const UploadAttendanceScreen(),
-                                  ),
-                                );
-                              },
-                              child: const HomeScreenMasterCard(
-                                attendance: true,
-                                tooltext: 'Students Attendance',
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => FeesDueScreen(),
-                                  ),
-                                );
-                              },
-                              child: const HomeScreenMasterCard(
-                                tooltext: 'Check your fee due here ',
-                                attendance: false,
-                              ),
-                            ),
-                          ],
-                        ),
                         const SizedBox(height: 20.0),
                         Wrap(
                           runAlignment: WrapAlignment.spaceBetween,
@@ -186,40 +155,70 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                           runSpacing: 20.0,
                           spacing: 20.0,
                           children: [
-                            HomeScreenSmallCard(
-                              tooltext:
-                                  'Check out your marks by tapping the button',
-                              icon: Icons.collections_bookmark_rounded,
-                              buttonText: "Marks",
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        const UploadMarksScreen(), // Navigate to the marks screen
-                                  ),
-                                );
-                              },
-                            ),
-                            HomeScreenSmallCard(
-                              tooltext: 'Sent assignments to students',
-                              icon: Icons.assignment,
-                              buttonText: "Assignments",
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => AddAssignmentScreen(),
+                            BounceInDown(
+                              child: ZoomTapAnimation(
+                                child: HomeScreenSmallCard(
+                                  tooltext: 'Allot student attendance',
+                                  icon: Icons.school,
+                                  buttonText: "Attendance",
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            UploadAttendanceScreen(), // Navigate to the marks screen
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ),
-                            HomeScreenSmallCard(
-                              tooltext: 'Checkout all the events here ',
-                              icon: Icons.edit_calendar_rounded,
-                              buttonText: "Events",
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => EventDisplayPage(),
+                            BounceInDown(
+                              child: ZoomTapAnimation(
+                                child: HomeScreenSmallCard(
+                                  tooltext:
+                                      'Check out your marks by tapping the button',
+                                  icon: Icons.collections_bookmark_rounded,
+                                  buttonText: "Marks",
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const UploadMarksScreen(), // Navigate to the marks screen
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            BounceInUp(
+                              child: ZoomTapAnimation(
+                                child: HomeScreenSmallCard(
+                                  tooltext: 'Sent assignments to students',
+                                  icon: Icons.assignment,
+                                  buttonText: "Assignments",
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => AddAssignmentPage(),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            BounceInUp(
+                              child: ZoomTapAnimation(
+                                child: HomeScreenSmallCard(
+                                  tooltext: 'Checkout all the events here ',
+                                  icon: Icons.edit_calendar_rounded,
+                                  buttonText: "Events",
+                                  onTap: () => Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => EventDisplayPage(),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),

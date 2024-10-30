@@ -17,71 +17,82 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
   bool _isLoading = true; // Track loading state
 
   Future<void> _fetchUserProfile() async {
-    final userDocRef = FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser!.uid)
-        .collection('profile_history')
-        .doc(FirebaseAuth.instance.currentUser!.uid);
+    try {
+      final userDocRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(FirebaseAuth.instance.currentUser!.uid)
+          .collection('profile_history')
+          .doc(FirebaseAuth.instance.currentUser!.uid);
 
-    final userDoc = await userDocRef.get();
+      final userDoc = await userDocRef.get();
 
-    if (userDoc.exists) {
-      final userData = userDoc.data() as Map<String, dynamic>;
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
 
-      setState(() {
-        _classyear = userData['class'];
-        _section = userData['section'];
-      });
+        setState(() {
+          _classyear = userData['class'];
+          _section = userData['section'];
+        });
 
-      await _fetchAssignments();
-    } else {
-      print("User profile does not exist.");
+        await _fetchAssignments();
+      } else {
+        print("User profile does not exist.");
+      }
+    } catch (e) {
+      print("Error fetching user profile: $e");
     }
   }
 
   Future<void> _fetchAssignments() async {
-    final assignmentsDocRef = FirebaseFirestore.instance
-        .collection('assignments')
-        .doc('$_classyear$_section');
+    try {
+      final assignmentsDocRef = FirebaseFirestore.instance
+          .collection('assignments')
+          .doc('$_classyear$_section');
 
-    final assignmentsDoc = await assignmentsDocRef.get();
+      final assignmentsDoc = await assignmentsDocRef.get();
 
-    if (assignmentsDoc.exists) {
-      print("Document found for class-section: $_classyear$_section");
+      if (assignmentsDoc.exists) {
+        print("Document found for class-section: $_classyear$_section");
 
-      // Define subjects to fetch
-      final subjectsCollection = [
-        'Hindi',
-        'Maths',
-        'Science',
-        'Social',
-        'English'
-      ];
+        // Define subjects to fetch
+        final subjectsCollection = [
+          'Hindi',
+          'Maths',
+          'Science',
+          'Social',
+          'English'
+        ];
 
-      for (String subject in subjectsCollection) {
-        final subjectRef = assignmentsDocRef.collection(subject);
-        final subjectDocs = await subjectRef.get();
+        for (String subject in subjectsCollection) {
+          final subjectRef = assignmentsDocRef.collection(subject);
+          final subjectDocs = await subjectRef.get();
 
-        // Debugging output
-        print("Fetching data from subject: $subject");
-        print("Documents found: ${subjectDocs.docs.length}");
+          // Debugging output
+          print("Fetching data from subject: $subject");
+          print("Documents found: ${subjectDocs.docs.length}");
 
-        if (subjectDocs.docs.isNotEmpty) {
-          subjectAssignments[subject] = subjectDocs.docs
-              .map((doc) => doc.data() as Map<String, dynamic>)
-              .toList();
-        } else {
-          subjectAssignments[subject] = [];
-          print("No documents found for subject: $subject");
+          if (subjectDocs.docs.isNotEmpty) {
+            subjectAssignments[subject] = subjectDocs.docs
+                .map((doc) => doc.data() as Map<String, dynamic>)
+                .toList();
+          } else {
+            subjectAssignments[subject] = [];
+            print("No documents found for subject: $subject");
+          }
         }
+      } else {
+        print("No document found for class-section: $_classyear$_section");
       }
-    } else {
-      print("No document found for class-section: $_classyear$_section");
-    }
 
-    setState(() {
-      _isLoading = false; // Stop loading after fetching
-    });
+      setState(() {
+        _isLoading = false; // Stop loading after fetching
+      });
+    } catch (e) {
+      print("Error fetching assignments: $e");
+      setState(() {
+        _isLoading = false; // Ensure loading indicator is hidden even on error
+      });
+    }
   }
 
   @override
@@ -132,9 +143,11 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                                     return AssignmentCard(
                                       description:
                                           assignment['description'] ?? 'N/A',
-                                      subject: assignment['subject'] ?? "N/A",
-                                      deadline: assignment['deadline'] ?? "N/A",
-                                      onTapSubmit: () {},
+                                      subject: subject,
+                                      deadline: assignment['deadline'] ?? 'N/A',
+                                      onTapSubmit: () {
+                                        // Add any specific action for the assignment card if needed
+                                      },
                                     );
                                   }).toList(),
                           ],
