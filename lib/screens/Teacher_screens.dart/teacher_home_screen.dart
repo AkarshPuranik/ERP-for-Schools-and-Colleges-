@@ -208,7 +208,7 @@ class _TeacherHomeScreenState extends State<TeacherHomeScreen> {
                               onTap: () => Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (_) => AddAssignmentScreen(),
+                                  builder: (_) => AddAssignmentPage(),
                                 ),
                               ),
                             ),

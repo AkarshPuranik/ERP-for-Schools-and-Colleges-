@@ -132,9 +132,11 @@ class _AssignmentScreenState extends State<AssignmentScreen> {
                                     return AssignmentCard(
                                       description:
                                           assignment['description'] ?? 'N/A',
-                                      subject: assignment['subject'] ?? "N/A",
-                                      deadline: assignment['deadline'] ?? "N/A",
-                                      onTapSubmit: () {},
+                                      subject: subject,
+                                      deadline: assignment['deadline'] ?? 'N/A',
+                                      onTapSubmit: () {
+                                        // Add any specific action for the assignment card if needed
+                                      },
                                     );
                                   }).toList(),
                           ],
