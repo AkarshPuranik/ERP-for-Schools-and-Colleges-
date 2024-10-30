@@ -22,7 +22,7 @@ class _AddAssignmentPageState extends State<AddAssignmentPage> {
   // Lists for dropdown options
   List<String> classList = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
   List<String> sectionList = ['A', 'B', 'C', 'D'];
-  List<String> subjectList = ['Math', 'Science', 'English', 'Social', 'Hindi'];
+  List<String> subjectList = ['Maths', 'Science', 'English', 'Social', 'Hindi'];
 
   // Save assignment data to Firestore
   Future<void> saveAssignment() async {
