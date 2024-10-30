@@ -52,7 +52,7 @@ class _MyAppState extends State<MyApp> {
       ),
       debugShowCheckedModeBanner: false,
       // home: userBox.values.isNotEmpty ? const HomeScreen() : const LoginScreen(),
-      home: const UserScreen(),
+      home: const SplashScreen(),
     );
   }
 }

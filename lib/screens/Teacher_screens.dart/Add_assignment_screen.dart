@@ -50,16 +50,22 @@ class _AddAssignmentScreenState extends State<AddAssignmentScreen> {
     // Create a unique document ID using class and section
     String documentId = '$selectedClass$selectedSection';
 
+    // Reference to the parent document
+    DocumentReference classSectionDoc =
+        FirebaseFirestore.instance.collection('assignments').doc(documentId);
+
+    // Create the parent document if it does not exist
+    await classSectionDoc.set({
+      'class': selectedClass,
+      'section': selectedSection,
+      // You can add other relevant data here if needed
+    }, SetOptions(merge: true)); // This will not overwrite existing data
+
     // Add a new assignment to the specific subject sub-collection
-    await FirebaseFirestore.instance
-        .collection('assignments')
-        .doc(documentId) // Store all assignments for the class-section pair
+    await classSectionDoc
         .collection(
             selectedSubject!) // Use the selected subject as the sub-collection name
         .add({
-      'class': selectedClass,
-      'subject': selectedSubject,
-      'section': selectedSection,
       'deadline': selectedDeadline?.toIso8601String(),
       'description': _descriptionController.text,
       'timestamp': FieldValue.serverTimestamp(),
