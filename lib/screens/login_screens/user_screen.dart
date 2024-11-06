@@ -22,7 +22,7 @@ class _UserScreenState extends State<UserScreen> {
   final TextEditingController _enrollmentController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool _isLoading = false;
-  bool isStudent = true; // Track if the user is a student or teacher
+  bool isStudent = true;
 
   Future<void> _login() async {
     setState(() {
@@ -30,47 +30,36 @@ class _UserScreenState extends State<UserScreen> {
     });
     try {
       if (isStudent) {
-        // Fetch email associated with the enrollment number from Firestore
         var snapshot = await FirebaseFirestore.instance
             .collection('users')
-            .where('enrollment_number',
-                isEqualTo: _enrollmentController.text.trim())
+            .where('enrollment_number', isEqualTo: _enrollmentController.text.trim())
             .get();
 
         print("Student Snapshot: ${snapshot.docs}");
 
         if (snapshot.docs.isNotEmpty) {
-          // Get the email corresponding to the enrollment number
           var email = snapshot.docs.first.get('email');
-
-          // Proceed with login using the email fetched from Firestore
-          UserCredential userCredential =
-              await _auth.signInWithEmailAndPassword(
+          UserCredential userCredential = await _auth.signInWithEmailAndPassword(
             email: email,
             password: _passwordController.text.trim(),
           );
 
-          // Navigate to HomeScreen on successful login
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (_) => const HomeScreen()),
           );
         } else {
-          // Enrollment number not found in Firestore
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text("Enrollment number not found")),
           );
         }
       } else {
-        // Proceed with login using the email and password
         try {
-          UserCredential userCredential =
-              await _auth.signInWithEmailAndPassword(
+          UserCredential userCredential = await _auth.signInWithEmailAndPassword(
             email: _emailController.text.trim(),
             password: _passwordController.text.trim(),
           );
 
-          // Check if the teacher exists in the 'teachers' collection
           var teacherSnapshot = await FirebaseFirestore.instance
               .collection('teachers')
               .where('email', isEqualTo: _emailController.text.trim())
@@ -79,21 +68,17 @@ class _UserScreenState extends State<UserScreen> {
           print("Teacher Snapshot: ${teacherSnapshot.docs}");
 
           if (teacherSnapshot.docs.isNotEmpty) {
-            // Navigate to HomeScreen on successful login
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const TeacherHomeScreen()),
             );
           } else {
-            // Teacher not found in Firestore
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Teacher not found")),
             );
-            // Sign out the user
             await _auth.signOut();
           }
         } catch (e) {
-          // Handle login error
           if (e is FirebaseAuthException) {
             if (e.code == 'invalid-email') {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -105,7 +90,7 @@ class _UserScreenState extends State<UserScreen> {
               );
             } else if (e.code == 'user-not-found') {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("User  not found")),
+                const SnackBar(content: Text("User not found")),
               );
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -133,7 +118,7 @@ class _UserScreenState extends State<UserScreen> {
         title: const Text('Choose Account Type'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -141,112 +126,104 @@ class _UserScreenState extends State<UserScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedDoctor = true;
-                        isStudent =
-                            true; // Set isStudent to true when Student is selected
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _selectedDoctor == true
-                              ? Colors.blue
-                              : Colors.grey,
+                  Flexible(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedDoctor = true;
+                          isStudent = true;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: _selectedDoctor == true ? Colors.blue : Colors.grey,
+                          ),
+                          borderRadius: BorderRadius.circular(10.0),
                         ),
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: Column(
-                        children: [
-                          ZoomIn(
-                            duration: Duration(seconds: 2),
-                            child: Image.asset(
-                              'assets/download.png', // Replace with your student image
-                              height: 140.0,
-                              width: 140.0,
+                        child: Column(
+                          children: [
+                            ZoomIn(
+                              duration: Duration(seconds: 2),
+                              child: Image.asset(
+                                'assets/download.png',
+                                height: 120.0, // Adjusted height
+                                width: 120.0,  // Adjusted width
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8.0),
-                          const Text(
-                            'Student',
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
+                            const SizedBox(height: 8.0),
+                            const Text(
+                              'Student',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          _selectedDoctor == true
-                              ? CircleAvatar(
-                                  radius: 10,
-                                  backgroundColor: Colors.blue,
-                                  child: Icon(Icons.check,
-                                      color: Colors.white, size: 15),
-                                )
-                              : Container(),
-                        ],
+                            if (_selectedDoctor == true)
+                              CircleAvatar(
+                                radius: 10,
+                                backgroundColor: Colors.blue,
+                                child: Icon(Icons.check, color: Colors.white, size: 15),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedDoctor = false;
-                        isStudent =
-                            false; // Set isStudent to false when Teacher is selected
-                      });
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: _selectedDoctor == false
-                              ? Colors.blue
-                              : Colors.grey,
+                  Flexible(
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _selectedDoctor = false;
+                          isStudent = false;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16.0),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: _selectedDoctor == false ? Colors.blue : Colors.grey,
+                          ),
+                          borderRadius: BorderRadius.circular(10.0),
                         ),
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: Column(
-                        children: [
-                          ZoomIn(
-                            duration: Duration(seconds: 2),
-                            child: Image.asset(
-                              'assets/8065183.png', // Replace with your teacher image
-                              height: 140.0,
-                              width: 140.0,
+                        child: Column(
+                          children: [
+                            ZoomIn(
+                              duration: Duration(seconds: 2),
+                              child: Image.asset(
+                                'assets/8065183.png',
+                                height: 120.0, // Adjusted height
+                                width: 120.0,  // Adjusted width
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8.0),
-                          const Text(
-                            'Teacher',
-                            style: TextStyle(
-                              fontSize: 16.0,
-                              fontWeight: FontWeight.bold,
+                            const SizedBox(height: 8.0),
+                            const Text(
+                              'Teacher',
+                              style: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          _selectedDoctor == false
-                              ? CircleAvatar(
-                                  radius: 10,
-                                  backgroundColor: Colors.blue,
-                                  child: Icon(Icons.check,
-                                      color: Colors.white, size: 15),
-                                )
-                              : Container(),
-                        ],
+                            if (_selectedDoctor == false)
+                              CircleAvatar(
+                                radius: 10,
+                                backgroundColor: Colors.blue,
+                                child: Icon(Icons.check, color: Colors.white, size: 15),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 20.0),
-              // Display TextFormFields only if either Student or Teacher is selected
               if (_selectedDoctor != null) ...[
                 FadeInLeft(
                   duration: Duration(seconds: 2),
                   child: TextFormField(
-                    controller:
-                        isStudent ? _enrollmentController : _emailController,
+                    controller: isStudent ? _enrollmentController : _emailController,
                     decoration: InputDecoration(
                       labelText: isStudent ? 'Enrollment Number' : 'Email',
                       floatingLabelBehavior: FloatingLabelBehavior.auto,
@@ -267,76 +244,32 @@ class _UserScreenState extends State<UserScreen> {
                   ),
                 ),
                 const SizedBox(height: 20.0),
-
-//TextButton(
-                //   onPressed: () {
-                //     if (isStudent) {
-                //       Navigator.pushReplacement(
-                //         context,
-                //         MaterialPageRoute(builder: (_) => const SignupScreen()),
-                //       );
-                //     } else {
-                //       Navigator.pushReplacement(
-                //         context,
-                //         MaterialPageRoute(
-                //             builder: (_) => const TeacherCreateAccount()),
-                //       );
-                //     }
-                //   },
-                //   child: Text(
-                //     isStudent
-                //         ? 'Register for student account?'
-                //         : 'Register for teacher account?',
-                //     style: TextStyle(color: Colors.blue),
-                //   ),
-                // ),
-
                 ZoomIn(
                   duration: Duration(seconds: 2),
                   child: ElevatedButton(
                     style: ButtonStyle(
-                        backgroundColor: WidgetStateProperty.all(
+                        backgroundColor: MaterialStateProperty.all(
                           const Color.fromARGB(255, 135, 180, 236),
                         ),
-                        foregroundColor: WidgetStateProperty.all(Colors.black)),
+                        foregroundColor: MaterialStateProperty.all(Colors.black)),
                     onPressed: _isLoading ? null : _login,
                     child: _isLoading
                         ? SizedBox(
-                            width: 24, // Set the width of the loading indicator
-                            height:
-                                24, // Set the height of the loading indicator
-                            child: LoadingIndicator(
-                              indicatorType: Indicator
-                                  .ballPulse, // Use the ballPulse indicator
-                              colors: [
-                                Colors.red,
-                                Colors.green,
-                                Colors.blue
-                              ], // Customize the color
-                              strokeWidth: 2, // Set the stroke width
-                              backgroundColor:
-                                  Colors.transparent, // Set background color
-                            ),
-                          )
+                      width: 24,
+                      height: 24,
+                      child: LoadingIndicator(
+                        indicatorType: Indicator.ballPulse,
+                        colors: [Colors.red, Colors.green, Colors.blue],
+                        strokeWidth: 2,
+                        backgroundColor: Colors.transparent,
+                      ),
+                    )
                         : const Text(
-                            'Login',
-                            style: TextStyle(color: Colors.white),
-                          ),
+                      'Login',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
-                // TextButton(
-                //     child: const Text(
-                //       "Create an Account",
-                //       style:
-                //           TextStyle(color: Color.fromARGB(255, 117, 187, 255)),
-                //     ),
-                //     onPressed: () {
-                //       Navigator.push(
-                //           context,
-                //           MaterialPageRoute(
-                //             builder: (_) => SignupScreen(),
-                //           ));
-                //     })
               ]
             ],
           ),

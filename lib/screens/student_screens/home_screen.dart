@@ -6,7 +6,6 @@ import 'package:hive/hive.dart';
 import 'package:page_animation_transition/animations/bottom_to_top_faded_transition.dart';
 import 'package:page_animation_transition/animations/fade_animation_transition.dart';
 import 'package:page_animation_transition/page_animation_transition.dart';
-import 'package:school_erp/screens/ask_doubt_screen.dart';
 import 'package:school_erp/screens/assignment_screen.dart';
 import 'package:school_erp/screens/attendance/attendance_screen.dart';
 import 'package:school_erp/screens/events/events_screen.dart';
@@ -32,8 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _profileImageUrl = '';
   String _feesDue = '';
   String _section = '';
-  double _overallAttendancePercentage =
-      0.0; // New variable to store overall percentage
+  double _overallAttendancePercentage = 0.0;
 
   @override
   void initState() {
@@ -62,8 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _section = userData['section'];
       });
       await _fetchFeesDue(enrollmentNumber);
-      await _fetchOverallAttendance(
-          enrollmentNumber); // Fetch overall attendance percentage
+      await _fetchOverallAttendance(enrollmentNumber);
     }
   }
 
@@ -80,41 +77,38 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final attendanceDocs = await attendanceCollection.get();
 
-      totalClasses +=
-          attendanceDocs.docs.length; // Count total classes for the subject
+      totalClasses += attendanceDocs.docs.length;
       attendedClasses += attendanceDocs.docs
           .where((doc) => doc['status'] == 'Present')
-          .length; // Count attended classes
+          .length;
     }
 
-    // Calculate overall attendance percentage
     setState(() {
       _overallAttendancePercentage = totalClasses > 0
           ? (attendedClasses / totalClasses) * 100
-          : 0.0; // Avoid division by zero
+          : 0.0;
     });
   }
 
   Future<void> _fetchFeesDue(String enrollmentNumber) async {
     final feeDocRef =
-        FirebaseFirestore.instance.collection('fees').doc(enrollmentNumber);
+    FirebaseFirestore.instance.collection('fees').doc(enrollmentNumber);
 
     final feeDoc = await feeDocRef.get();
 
     if (feeDoc.exists) {
       final feeData = feeDoc.data() as Map<String, dynamic>;
       final amount = feeData['amount'];
-      final status = feeData['status']; // Fetch the status value
+      final status = feeData['status'];
 
       setState(() {
         if (status == 'Paid') {
-          _feesDue = "No due's"; // Set to "No due's" if status is paid
+          _feesDue = "No due's";
         } else if (status == 'Unpaid') {
-          _feesDue = amount.toString(); // Convert to string to display in UI
+          _feesDue = amount.toString();
         }
       });
     } else {
-      // Show "No data found" if no data is found
       setState(() {
         _feesDue = "No data found";
       });
@@ -140,8 +134,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   Padding(
-                    padding: const EdgeInsets.only(
-                        left: 20.0, right: 20.0, top: 50.0),
+                    padding: const EdgeInsets.only(left: 20.0, right: 20.0, top: 50.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -173,8 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             const SizedBox(height: 20.0),
                             Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 14.0, vertical: 6.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 6.0),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(20.0),
@@ -196,11 +188,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         ZoomTapAnimation(
                           child: GestureDetector(
                             onTap: () {
-                              Navigator.of(context).push(
-                                  PageAnimationTransition(
-                                      page: const SettingsScreen(),
-                                      pageAnimationType:
-                                          FadeAnimationTransition()));
+                              Navigator.of(context).push(PageAnimationTransition(
+                                  page: const SettingsScreen(),
+                                  pageAnimationType: FadeAnimationTransition()));
                             },
                             child: ZoomIn(
                               child: CircleAvatar(
@@ -226,18 +216,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             ZoomTapAnimation(
                               child: GestureDetector(
                                 onTap: () {
-                                  Navigator.of(context).push(
-                                      PageAnimationTransition(
-                                          page: AttendanceScreen(
-                                              enrollmentNumber:
-                                                  enrollmentNumber),
-                                          pageAnimationType:
-                                              FadeAnimationTransition()));
+                                  Navigator.of(context).push(PageAnimationTransition(
+                                      page: AttendanceScreen(enrollmentNumber: enrollmentNumber),
+                                      pageAnimationType: FadeAnimationTransition()));
                                 },
                                 child: BounceInLeft(
                                   child: HomeScreenMasterCard(
                                     attendancepercentage:
-                                        '${_overallAttendancePercentage.toStringAsFixed(1)}%', // Display overall percentage
+                                    '${_overallAttendancePercentage.toStringAsFixed(1)}%',
                                     attendance: true,
                                     tooltext: 'Check out your attendance here ',
                                   ),
@@ -248,11 +234,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: ZoomTapAnimation(
                                 child: GestureDetector(
                                   onTap: () {
-                                    Navigator.of(context).push(
-                                        PageAnimationTransition(
-                                            page: const FeesDueScreen(),
-                                            pageAnimationType:
-                                                FadeAnimationTransition()));
+                                    Navigator.of(context).push(PageAnimationTransition(
+                                        page: const FeesDueScreen(),
+                                        pageAnimationType: FadeAnimationTransition()));
                                   },
                                   child: HomeScreenMasterCard(
                                     feespending: '₹$_feesDue/-',
@@ -274,17 +258,14 @@ class _HomeScreenState extends State<HomeScreen> {
                             BounceInDown(
                               child: ZoomTapAnimation(
                                 child: HomeScreenSmallCard(
-                                  tooltext:
-                                      'Check out your marks by tapping the button',
+                                  tooltext: 'Check out your marks by tapping the button',
                                   icon: Icons.collections_bookmark_rounded,
                                   buttonText: "Marks",
                                   onTap: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) => ViewMarksScreen(
-                                            enrollmentNumber:
-                                                enrollmentNumber), // Navigate to the marks screen
+                                        builder: (_) => ViewMarksScreen(enrollmentNumber: enrollmentNumber),
                                       ),
                                     );
                                   },
@@ -301,28 +282,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) =>
-                                              const AssignmentScreen(),
+                                          builder: (_) => const AssignmentScreen(),
                                         ),
                                       );
                                     }),
-                              ),
-                            ),
-                            BounceInUp(
-                              child: ZoomTapAnimation(
-                                child: HomeScreenSmallCard(
-                                  tooltext: 'Have any doubt? Ask here!',
-                                  icon: Icons.question_answer,
-                                  buttonText: "Ask Doubt",
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => const AskDoubtScreen(),
-                                      ),
-                                    );
-                                  },
-                                ),
                               ),
                             ),
                             BounceInUp(
@@ -335,8 +298,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (_) =>
-                                            const EventDisplayPage(),
+                                        builder: (_) => const EventDisplayPage(),
                                       ),
                                     );
                                   },

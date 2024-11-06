@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:school_erp/reusable_widgets/home_screen_cards/master_card.dart';
 import 'package:school_erp/reusable_widgets/home_screen_cards/small_card.dart';
 import 'package:school_erp/reusable_widgets/loader.dart';
-import 'package:school_erp/screens/Teacher_screens.dart/Add_assignment_screen.dart';
+import 'package:school_erp/screens/Teacher_screens.dart/add_assignement.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_attendance.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/teacher_setting_screen.dart';
 import 'package:school_erp/screens/Teacher_screens.dart/upload_marks.dart';
